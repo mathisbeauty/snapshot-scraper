@@ -70,23 +70,30 @@ const getAllStakers = (
  * @param blockNumbers 0 = latest
  */
 export const getStakersSnapshots = async (
-  blockNumbers: number[]
+  // blockNumbers: number[]
+  stakingSession: number
 ): Promise<BalanceSnapshots> => {
   const balanceSnapshots: BalanceSnapshots = {};
 
-  for (const blockNumber of blockNumbers) {
-    const stakers = await getAllStakers(blockNumber);
-    balanceSnapshots[blockNumber] = {};
+  const blockNumber = undefined;
 
-    if (stakers) {
-      for (const address of stakers) {
-        const stakerBalance = await getStakerBalance(address, blockNumber);
-        if (stakerBalance) {
-          balanceSnapshots[blockNumber][address] = stakerBalance;
-        }
-        break;
+  // for (const blockNumber of blockNumbers) {
+  const stakers = await getAllStakers(blockNumber);
+  balanceSnapshots[stakingSession] = {};
+
+  if (stakers) {
+    for (const [i, address] of stakers.entries()) {
+      console.log(`Staker ${i + 1} of ${stakers.length}`);
+      const stakerBalance = await getStakerBalance(address, blockNumber);
+      console.log(stakerBalance);
+      if (stakerBalance && stakerBalance >= 10 ** 11) {
+        balanceSnapshots[stakingSession][address] = stakerBalance;
       }
+      // if (i === 5) {
+      //   break;
+      // }
     }
+    // }
   }
 
   return balanceSnapshots;

@@ -1,5 +1,6 @@
 import { setBalancesSnapshots } from "./helpers/cache-helper";
-import { getStakePeriod } from "./stakers/agi";
+// import { getStakers, getStakeInfo, getStakersSnapshots } from "./stakers/agi";
+import { getStakersSnapshots } from "./stakers/agix";
 
 if (process.env.INFURA_PROJECT_URL === undefined) {
   console.error("Please define the URL for the Infura project");
@@ -10,10 +11,18 @@ if (process.env.INFURA_PROJECT_URL === undefined) {
 const STAKERS_BLOCK_NUMBERS: number[] = [0];
 
 (async () => {
-  const stakePeriod = await getStakePeriod(14);
-  // const stakersBalanceSnapshots = await getStakersSnapshots(
-  //   STAKERS_BLOCK_NUMBERS
+  const stakersBalanceSnapshots = await getStakersSnapshots(15);
+
+  console.log(stakersBalanceSnapshots);
+
+  setBalancesSnapshots("agix_stake", stakersBalanceSnapshots);
+
+  // const stakingPeriodIndexes = [13, 14];
+
+  // setBalancesSnapshots(
+  //   "agi_stake",
+  //   await getStakersSnapshots(stakingPeriodIndexes)
   // );
 
-  console.log(stakePeriod);
+  console.log();
 })();
