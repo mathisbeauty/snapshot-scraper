@@ -2,9 +2,9 @@
   "name": "snapshot-scraper",
   "version": "1.0.0",
   "description": "Scrape the blockchain to generate snapshots",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "scripts": {
-    "start": "tsc && node dist/index.js",
+    "start": "tsc && node dist/src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -18,7 +18,12 @@
   },
   "homepage": "https://github.com/mathisbeauty/snapshot-scraper#readme",
   "devDependencies": {
+    "@types/node": "^16.0.0",
     "tslint": "^6.1.3",
     "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "web3": "^1.4.0"
   }
 }
