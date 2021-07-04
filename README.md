@@ -1,1 +1,1 @@
-"# Snapshot Scraper" 
+# Snapshot Scraper
