@@ -2,10 +2,7 @@ import lpAbiJson from "../../contracts/abi/lp-agix-eth.json";
 import { AGIX_ETH_PAIR_CONTRACT_ADDRESS } from "../constants";
 import Web3 from "web3";
 
-export const getLpSnapshots = async () => {
-  const web3 = new Web3(
-    new Web3.providers.HttpProvider(process.env.INFURA_PROJECT_URL as string)
-  );
+export const getLpSnapshots = async (web3: Web3) => {
   const contract = new web3.eth.Contract(
     lpAbiJson as any,
     AGIX_ETH_PAIR_CONTRACT_ADDRESS

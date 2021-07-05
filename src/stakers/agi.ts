@@ -1,103 +1,126 @@
 import Web3 from "web3";
-import { AbiItem } from "web3-utils";
-import { post } from "../helpers/api-helper";
+import { EventData } from "web3-eth-contract";
 import { AGI_STAKING_CONTRACT_ADDRESS } from "../constants";
 import agiAbi from "../../contracts/abi/stakers-agi.json";
-import { BalanceSnapshots } from "../types";
+import { BalanceSnapshots, Snapshot } from "../types";
+import { AGI_STAKE_STARTING_BLOCK } from "../parameters";
+import { getJson, setJson } from "../helpers/cache-helper";
+import _, { keys } from "lodash";
 
 const abiAndAddress = {
   contractAddress: AGI_STAKING_CONTRACT_ADDRESS,
-  abi: agiAbi,
+  abi: agiAbi as any,
 };
 
 const { abi, contractAddress } = abiAndAddress;
 
-export const getStakers = (stakeMapIndex: number, blockNumber?: number) => {
-  const functionAbi: AbiItem = abi.find(
-    (func) => func.name === "getStakeHolders"
-  ) as any;
-  const outputAbi = functionAbi && functionAbi.outputs;
-  if (functionAbi && outputAbi) {
-    const web3 = new Web3();
-    const functionCall = web3.eth.abi.encodeFunctionCall(functionAbi, [
-      `${stakeMapIndex}`,
-    ]);
-    return post(contractAddress, functionCall, blockNumber).then((response) => {
-      if (response) {
-        const stakers = web3.eth.abi.decodeParameters(
-          outputAbi,
-          response.data.result as string
-        )["0"] as string[];
-        return stakers;
-      }
-      return null;
-    });
-  }
-};
-
-export const getStakeInfo = (
-  stakeMapIndex: number,
-  address: string,
-  blockNumber?: number
-) => {
-  const functionAbi: AbiItem = abi.find(
-    (func) => func.name === "getStakeInfo"
-  ) as any;
-  const outputAbi = functionAbi && functionAbi.outputs;
-  if (functionAbi && outputAbi) {
-    const web3 = new Web3();
-    const functionCall = web3.eth.abi.encodeFunctionCall(functionAbi, [
-      `${stakeMapIndex}`,
-      address,
-    ]);
-    return post(contractAddress, functionCall, blockNumber).then((response) => {
-      if (response) {
-        const stakeInfo = web3.eth.abi.decodeParameters(
-          outputAbi,
-          response.data.result as string
-        );
-        return stakeInfo;
-      }
-      return null;
-    });
-  }
-};
-
-/**
- * Get stakers snapshots from old staking contract, by staking period index (index 0 it's not used, start at 1)
- * @param stakingPeriodIndexes
- * @param blockNumber
- * @returns
- */
-export const getStakersSnapshots = async (
-  stakingPeriodIndexes: number[],
-  blockNumber?: number
-) => {
+export const getAgiStakeSnapshots = async (
+  web3: Web3,
+  stakingPeriodIndexes: number[]
+): Promise<BalanceSnapshots> => {
   const balanceSnapshots: BalanceSnapshots = {};
+  const tempBalanceSnapshots: BalanceSnapshots = {};
 
-  for (const stakeMapIndex of stakingPeriodIndexes) {
-    const stakers = await getStakers(stakeMapIndex, blockNumber);
-    balanceSnapshots[stakeMapIndex] = {};
-    console.log(`Staking period #${stakeMapIndex}`);
+  const contract = new web3.eth.Contract(abi, contractAddress);
 
-    if (stakers) {
-      for (const [i, address] of stakers.entries()) {
-        console.log(`Staker ${i + 1} of ${stakers.length}`);
-        const stakerInfo = await getStakeInfo(
-          stakeMapIndex,
-          address,
-          blockNumber
-        );
+  const getEvents = async (name: string) =>
+    await contract.getPastEvents(name, {
+      fromBlock: AGI_STAKE_STARTING_BLOCK,
+    });
 
-        if (stakerInfo) {
-          const stakerBalance = Number(stakerInfo.approvedAmount);
-          if (stakerBalance >= 10 ** 11) {
-            balanceSnapshots[stakeMapIndex][address] = stakerBalance;
-          }
-        }
-      }
-    }
+  const cachedEvents = getJson("agi_stake", "events");
+
+  const events: { [key: string]: EventData[] } = cachedEvents || {
+    submitStakeEvents: await getEvents("SubmitStake"),
+    autoRenewStakeEvents: await getEvents("AutoRenewStake"),
+    renewStakeEvents: await getEvents("RenewStake"),
+    rejectStakeEvents: await getEvents("RejectStake"),
+    claimStakeEvents: await getEvents("ClaimStake"),
+    approveStakeEvents: await getEvents("ApproveStake"),
+    withdrawStakeEvents: await getEvents("WithdrawStake"),
+  };
+
+  if (!cachedEvents) {
+    setJson("agi_stake", "events", JSON.stringify(events, null, 4));
   }
 
-  return balanceSnapshots;
+  const latestStakingPeriod = Math.max(...stakingPeriodIndexes);
+
+  for (let i = 1; i <= latestStakingPeriod; i++) {
+    tempBalanceSnapshots[`${i}`] = {};
+  }
+
+  events.submitStakeEvents.map((event) => {
+    const { stakeIndex, staker, stakeAmount } = event.returnValues;
+    if (Number(stakeIndex) > latestStakingPeriod) {
+      return;
+    }
+    tempBalanceSnapshots[stakeIndex][staker] =
+      (tempBalanceSnapshots[stakeIndex][staker] || 0) + Number(stakeAmount);
+  });
+
+  events.rejectStakeEvents.map((event) => {
+    const { stakeIndex, staker, returnAmount } = event.returnValues;
+    if (Number(stakeIndex) > latestStakingPeriod) {
+      return;
+    }
+    tempBalanceSnapshots[stakeIndex][staker] =
+      (tempBalanceSnapshots[stakeIndex][staker] || 0) - Number(returnAmount);
+  });
+
+  [...events.autoRenewStakeEvents, ...events.renewStakeEvents].map((event) => {
+    const {
+      newStakeIndex: stakeIndex,
+      staker,
+      rewardAmount,
+      returnAmount,
+    } = event.returnValues;
+    if (Number(stakeIndex) > latestStakingPeriod) {
+      return;
+    }
+    tempBalanceSnapshots[stakeIndex][staker] =
+      (tempBalanceSnapshots[stakeIndex][staker] || 0) +
+      Number(rewardAmount) -
+      Number(returnAmount);
+  });
+
+  events.claimStakeEvents.map((event) => {
+    const { stakeIndex, staker, rewardAmount, totalAmount } =
+      event.returnValues;
+    if (Number(stakeIndex) > latestStakingPeriod) {
+      return;
+    }
+    tempBalanceSnapshots[stakeIndex][staker] =
+      (tempBalanceSnapshots[stakeIndex][staker] || 0) +
+      (Number(totalAmount) - Number(rewardAmount));
+  });
+
+  events.approveStakeEvents.map((event) => {
+    const { stakeIndex, staker, returnAmount } = event.returnValues;
+    if (Number(stakeIndex) > latestStakingPeriod) {
+      return;
+    }
+    tempBalanceSnapshots[stakeIndex][staker] =
+      (tempBalanceSnapshots[stakeIndex][staker] || 0) + Number(returnAmount);
+  });
+
+  events.withdrawStakeEvents.map((event) => {
+    const { stakeIndex, staker, stakeAmount } = event.returnValues;
+    if (Number(stakeIndex) > latestStakingPeriod) {
+      return;
+    }
+    tempBalanceSnapshots[stakeIndex][staker] =
+      (tempBalanceSnapshots[stakeIndex][staker] || 0) - Number(stakeAmount);
+  });
+
+  let currentState: Snapshot = {};
+
+  _.entries(tempBalanceSnapshots).forEach(([index, curr]) => {
+    currentState = { ...currentState, ...curr };
+    if (stakingPeriodIndexes.includes(Number(index))) {
+      balanceSnapshots[index] = _.cloneDeep(currentState);
+    }
+  });
+
+  return tempBalanceSnapshots;
 };

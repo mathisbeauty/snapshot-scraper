@@ -1,32 +1,25 @@
+import Web3 from "web3";
 import { setBalancesSnapshots } from "./helpers/cache-helper";
-import { getLpSnapshots } from "./lp/lp";
-import { getStakers } from "./stakers/agi";
-// import { getStakers, getStakeInfo, getStakersSnapshots } from "./stakers/agi";
-// import { getStakersSnapshots } from "./stakers/agix";
+import { AGIX_STAKE_PERIODS, AGI_STAKE_PERIODS } from "./parameters";
+import { getAgiStakeSnapshots } from "./stakers/agi";
+import { getAgixStakeSnapshots } from "./stakers/agix";
 
-if (process.env.INFURA_PROJECT_URL === undefined) {
+if (process.env.WEB3_PROVIDER_URL === undefined) {
   console.error("Please define the URL for the Infura project");
   process.exit(1);
 }
 
-// 0 = latest
-const STAKERS_BLOCK_NUMBERS: number[] = [0];
-
 (async () => {
-  console.log(await getStakers());
-  // console.log(await getLpSnapshots());
-  // const stakersBalanceSnapshots = await getStakersSnapshots(15);
+  const web3 = new Web3(
+    new Web3.providers.HttpProvider(process.env.WEB3_PROVIDER_URL as string)
+  );
 
-  // console.log(stakersBalanceSnapshots);
+  const agiStakeSnapshots = await getAgiStakeSnapshots(web3, AGI_STAKE_PERIODS);
+  const agixStakeSnapshots = await getAgixStakeSnapshots(
+    web3,
+    AGIX_STAKE_PERIODS
+  );
 
-  // setBalancesSnapshots("agix_stake", stakersBalanceSnapshots);
-
-  // const stakingPeriodIndexes = [13, 14];
-
-  // setBalancesSnapshots(
-  //   "agi_stake",
-  //   await getStakersSnapshots(stakingPeriodIndexes)
-  // );
-
-  console.log();
+  setBalancesSnapshots("agi_stake", agiStakeSnapshots, true);
+  setBalancesSnapshots("agix_stake", agixStakeSnapshots, true);
 })();

@@ -16,6 +16,32 @@ export const getFileFromBlockNumber = (blockNumber: number | string) =>
 export const isCached = (id: string, blockNumber: number) =>
   exists(join(id, getFileFromBlockNumber(blockNumber)));
 
+// Events
+
+export const getJson = (id: string, name: string) => {
+  try {
+    if (exists(CACHE_PATH)) {
+      const jsonPath = join(id, name + ".json");
+      return JSON.parse(fs.readFileSync(jsonPath, { encoding: "utf-8" }));
+    }
+  } catch (e) {
+    return null;
+  }
+};
+
+export const setJson = (id: string, name: string, data: string) => {
+  if (exists(CACHE_PATH)) {
+    const idPath = join(id);
+    if (!exists(idPath)) {
+      fs.mkdirSync(idPath);
+    }
+    const jsonPath = join(id, name + ".json");
+    fs.writeFileSync(jsonPath, data);
+  }
+};
+
+// Snapshots
+
 export const snapshotToStr = (snapshot: Snapshot) => {
   return _.reduce(
     _.entries(snapshot),
@@ -28,7 +54,8 @@ export const snapshotToStr = (snapshot: Snapshot) => {
 
 export const setBalancesSnapshots = (
   id: string,
-  snapshots: BalanceSnapshots
+  snapshots: BalanceSnapshots,
+  force?: boolean
 ) => {
   _.entries(snapshots).forEach(([blockNumber, snapshot]) => {
     // If cache directory exists
@@ -38,7 +65,7 @@ export const setBalancesSnapshots = (
         fs.mkdirSync(idPath);
       }
       const blockPath = join(id, getFileFromBlockNumber(blockNumber));
-      if (!exists(blockPath)) {
+      if (!exists(blockPath) || force) {
         fs.writeFileSync(blockPath, snapshotToStr(snapshot));
       }
     }
