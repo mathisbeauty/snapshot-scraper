@@ -53,6 +53,15 @@ export const getAgixStakeSnapshots = async (
       (balanceSnapshots[stakeIndex][staker] || 0) + Number(stakeAmount);
   });
 
+  events.rejectStakeEvents.map((event) => {
+    const { stakeIndex, staker, returnAmount } = event.returnValues;
+    if (!stakingPeriodIndexes.includes(Number(stakeIndex))) {
+      return;
+    }
+    balanceSnapshots[stakeIndex][staker] =
+      (balanceSnapshots[stakeIndex][staker] || 0) - Number(returnAmount);
+  });
+
   events.withdrawStakeEvents.map((event) => {
     const { stakeIndex, staker, stakeAmount } = event.returnValues;
     if (!stakingPeriodIndexes.includes(Number(stakeIndex))) {

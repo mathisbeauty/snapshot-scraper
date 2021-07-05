@@ -72,7 +72,7 @@ export const getAgiStakeSnapshots = async (
     const {
       newStakeIndex: stakeIndex,
       staker,
-      rewardAmount,
+      approvedAmount,
       returnAmount,
     } = event.returnValues;
     if (Number(stakeIndex) > latestStakingPeriod) {
@@ -80,7 +80,7 @@ export const getAgiStakeSnapshots = async (
     }
     tempBalanceSnapshots[stakeIndex][staker] =
       (tempBalanceSnapshots[stakeIndex][staker] || 0) +
-      Number(rewardAmount) -
+      Number(approvedAmount) -
       Number(returnAmount);
   });
 
@@ -122,5 +122,5 @@ export const getAgiStakeSnapshots = async (
     }
   });
 
-  return tempBalanceSnapshots;
+  return balanceSnapshots;
 };

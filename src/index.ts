@@ -5,7 +5,7 @@ import { getAgiStakeSnapshots } from "./stakers/agi";
 import { getAgixStakeSnapshots } from "./stakers/agix";
 
 if (process.env.WEB3_PROVIDER_URL === undefined) {
-  console.error("Please define the URL for the Infura project");
+  console.error("Please define the URL for the Web3 provider");
   process.exit(1);
 }
 
