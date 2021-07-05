@@ -12,5 +12,4 @@ export const getAgiHoldersSnapshots = async (web3: Web3) => {
   const events = await contract.getPastEvents("Transfer", {
     fromBlock: AGIX_FIRST_BLOCK,
   });
-  console.log(events);
 };

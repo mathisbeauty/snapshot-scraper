@@ -11,6 +11,4 @@ export const getLpSnapshots = async (web3: Web3) => {
   const events = await contract.getPastEvents("Mint", {
     fromBlock: "12561147",
   });
-  console.log(events);
-  // return callContractFunc(lpAbiJson, AGIX_ETH_PAIR_CONTRACT_ADDRESS, '', [])
 };
