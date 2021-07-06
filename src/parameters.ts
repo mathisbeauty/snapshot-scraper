@@ -1,9 +1,15 @@
 // Staking
 
+// export const AGIX_STAKE_REWARD_PER_PERIOD = 10000000000000;
+
+export const AGI_MIN_STAKE = 50000000000;
+
 export const AGI_STAKE_STARTING_BLOCK = 9797090;
 export const AGIX_STAKE_STARTING_BLOCK = 9797090;
 
-export const AGI_STAKE_PERIODS: number[] = [13, 14];
+export const AGI_STAKE_PERIODS: number[] = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+];
 export const AGIX_STAKE_PERIODS: number[] = [15];
 
 // Holders

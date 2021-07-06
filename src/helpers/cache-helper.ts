@@ -71,3 +71,29 @@ export const setBalancesSnapshots = (
     }
   });
 };
+
+export const loadSnapshot = (id: string, name: string) => {
+  if (exists(CACHE_PATH)) {
+    const idPath = join(id);
+    if (exists(idPath)) {
+      const jsonPath = join(id, name + ".csv");
+      const data = fs.readFileSync(jsonPath, { encoding: "utf-8" });
+      // Split by new line and remove header
+      const snapshot: Snapshot = data
+        .split("\n")
+        .slice(1)
+        .reduce((prev, line) => {
+          const next = {
+            ...prev,
+          };
+          const [address, balanceStr] = line.split(",");
+          const balance = Number(balanceStr);
+          if (!isNaN(balance)) {
+            next[address] = balance;
+          }
+          return next;
+        }, {} as Snapshot);
+      return snapshot;
+    }
+  }
+};
