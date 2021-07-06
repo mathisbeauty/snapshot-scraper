@@ -128,15 +128,6 @@ export const getAgiStakeSnapshots = async (
       (tempBalanceSnapshots[stakeIndex][staker] || 0) + Number(stakeAmount);
   });
 
-  events.claimStakeEvents.map((event) => {
-    const { stakeIndex, staker, totalAmount } = event.returnValues;
-    if (Number(stakeIndex) > latestStakingPeriod) {
-      return;
-    }
-    tempBalanceSnapshots[stakeIndex][staker] =
-      (tempBalanceSnapshots[stakeIndex][staker] || 0) - Number(totalAmount);
-  });
-
   events.approveStakeEvents.map((event) => {
     const { stakeIndex, staker, returnAmount } = event.returnValues;
     if (Number(stakeIndex) > latestStakingPeriod) {
@@ -155,15 +146,26 @@ export const getAgiStakeSnapshots = async (
       (tempBalanceSnapshots[stakeIndex][staker] || 0) - Number(stakeAmount);
   });
 
+  events.claimStakeEvents.map((event) => {
+    const { stakeIndex, staker, rewardAmount, totalAmount } =
+      event.returnValues;
+    if (Number(stakeIndex) > latestStakingPeriod) {
+      return;
+    }
+    tempBalanceSnapshots[stakeIndex][staker] =
+      (tempBalanceSnapshots[stakeIndex][staker] || 0) -
+      (Number(totalAmount) - Number(rewardAmount));
+  });
+
   let currentState: Snapshot = {};
 
   _.entries(tempBalanceSnapshots).forEach(([index, curr]) => {
     currentState = { ...currentState, ...curr };
-    // _.keys(currentState).forEach((staker) => {
-    //   if (!stakeHolders[index].includes(staker)) {
-    //     delete currentState[staker];
-    //   }
-    // });
+    _.keys(currentState).forEach((staker) => {
+      if (!stakeHolders[index].includes(staker)) {
+        delete currentState[staker];
+      }
+    });
     // Update last snapshot to match the available stake info
     if (index === "14") {
       balanceSnapshots[index] = _.cloneDeep(currentState);
@@ -173,11 +175,9 @@ export const getAgiStakeSnapshots = async (
           const next: any = {
             ...prev,
           };
-          if (stakeInfo[14][address]) {
-            next[address as string] = Number(
-              stakeInfo[14][address].approvedAmount
-            );
-          }
+          next[address as string] = Number(
+            stakeInfo[14][address].approvedAmount
+          );
           return next;
         }, {}),
       };
