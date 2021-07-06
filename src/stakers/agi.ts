@@ -107,6 +107,18 @@ export const getAgiStakeSnapshots = async (
     setJson("agi_stake", "stake_info", JSON.stringify(stakeInfo, null, 4));
   }
 
+  events.autoRenewStakeEvents.map((event) => {
+    const {
+      newStakeIndex: stakeIndex,
+      staker,
+      stakeAmount,
+    } = event.returnValues;
+    if (Number(stakeIndex) > latestStakingPeriod) {
+      return;
+    }
+    tempBalanceSnapshots[stakeIndex][staker] = Number(stakeAmount);
+  });
+
   events.submitStakeEvents.map((event) => {
     const { stakeIndex, staker, stakeAmount } = event.returnValues;
     if (Number(stakeIndex) > latestStakingPeriod) {
@@ -143,27 +155,15 @@ export const getAgiStakeSnapshots = async (
       (tempBalanceSnapshots[stakeIndex][staker] || 0) - Number(stakeAmount);
   });
 
-  events.autoRenewStakeEvents.map((event) => {
-    const {
-      newStakeIndex: stakeIndex,
-      staker,
-      stakeAmount,
-    } = event.returnValues;
-    if (Number(stakeIndex) > latestStakingPeriod) {
-      return;
-    }
-    tempBalanceSnapshots[stakeIndex][staker] = Number(stakeAmount);
-  });
-
   let currentState: Snapshot = {};
 
   _.entries(tempBalanceSnapshots).forEach(([index, curr]) => {
     currentState = { ...currentState, ...curr };
-    _.keys(currentState).forEach((staker) => {
-      if (!stakeHolders[index].includes(staker)) {
-        delete currentState[staker];
-      }
-    });
+    // _.keys(currentState).forEach((staker) => {
+    //   if (!stakeHolders[index].includes(staker)) {
+    //     delete currentState[staker];
+    //   }
+    // });
     // Update last snapshot to match the available stake info
     if (index === "14") {
       balanceSnapshots[index] = _.cloneDeep(currentState);
@@ -173,9 +173,11 @@ export const getAgiStakeSnapshots = async (
           const next: any = {
             ...prev,
           };
-          next[address as string] = Number(
-            stakeInfo[14][address].approvedAmount
-          );
+          if (stakeInfo[14][address]) {
+            next[address as string] = Number(
+              stakeInfo[14][address].approvedAmount
+            );
+          }
           return next;
         }, {}),
       };
@@ -187,11 +189,11 @@ export const getAgiStakeSnapshots = async (
   });
 
   // Print the total sum of the AGI tokens for each staking period
-  // console.log(
-  //   _.entries(balanceSnapshots).map(
-  //     (e) => _.values(e[1]).reduce((p, c) => p + c, 0) / 10 ** 8
-  //   )
-  // );
+  console.log(
+    _.entries(balanceSnapshots).map(
+      (e) => _.values(e[1]).reduce((p, c) => p + c, 0) / 10 ** 8
+    )
+  );
 
   return balanceSnapshots;
 };
