@@ -3,3 +3,4 @@ package-lock.json
 dist
 cache/**/events.json
 cache/**/stake_holders.json
+cache/**/transaction_senders.json

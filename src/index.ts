@@ -19,16 +19,18 @@ if (process.env.WEB3_PROVIDER_URL === undefined) {
     new Web3.providers.HttpProvider(process.env.WEB3_PROVIDER_URL as string)
   );
 
-  const agiStakeSnapshots = await getAgiStakeSnapshots(web3, AGI_STAKE_PERIODS);
+  // const agiStakeSnapshots = await getAgiStakeSnapshots(web3, AGI_STAKE_PERIODS);
 
-  setBalancesSnapshots("agi_stake", agiStakeSnapshots, true);
+  // setBalancesSnapshots("agi_stake", agiStakeSnapshots, true);
 
-  const agixStakeSnapshots = await getAgixStakeSnapshots(
-    web3,
-    AGIX_STAKE_PERIODS
-  );
+  // const agixStakeSnapshots = await getAgixStakeSnapshots(
+  //   web3,
+  //   AGIX_STAKE_PERIODS
+  // );
 
-  setBalancesSnapshots("agix_stake", agixStakeSnapshots, true);
+  // setBalancesSnapshots("agix_stake", agixStakeSnapshots, true);
 
   const agixLpSnapshots = await getLpSnapshots(web3, LP_SNAPSHOT_BLOCKS);
+
+  setBalancesSnapshots("agix_lp", agixLpSnapshots, true);
 })();
