@@ -26,4 +26,9 @@ export const AGIX_FIRST_BLOCK = 12326815;
 
 export const LP_STARTING_BLOCK = 12561147;
 
-// export const LP_FIRST_SNAPSHOT_BLOCK =
+export const LP_SNAPSHOT_BLOCKS: number[] = [
+  // Block at Jun-18-2021 11:58:28 PM +UTC
+  12661467,
+  // Block at Jul-07-2021 01:22:54 PM +UTC
+  12780535,
+];

@@ -1,6 +1,11 @@
 import Web3 from "web3";
 import { setBalancesSnapshots } from "./helpers/cache-helper";
-import { AGIX_STAKE_PERIODS, AGI_STAKE_PERIODS } from "./parameters";
+import { getLpSnapshots } from "./lp/lp";
+import {
+  AGIX_STAKE_PERIODS,
+  AGI_STAKE_PERIODS,
+  LP_SNAPSHOT_BLOCKS,
+} from "./parameters";
 import { getAgiStakeSnapshots } from "./stakers/agi";
 import { getAgixStakeSnapshots } from "./stakers/agix";
 
@@ -15,11 +20,15 @@ if (process.env.WEB3_PROVIDER_URL === undefined) {
   );
 
   const agiStakeSnapshots = await getAgiStakeSnapshots(web3, AGI_STAKE_PERIODS);
+
+  setBalancesSnapshots("agi_stake", agiStakeSnapshots, true);
+
   const agixStakeSnapshots = await getAgixStakeSnapshots(
     web3,
     AGIX_STAKE_PERIODS
   );
 
-  setBalancesSnapshots("agi_stake", agiStakeSnapshots, true);
   setBalancesSnapshots("agix_stake", agixStakeSnapshots, true);
+
+  const agixLpSnapshots = await getLpSnapshots(web3, LP_SNAPSHOT_BLOCKS);
 })();

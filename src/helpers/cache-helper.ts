@@ -4,9 +4,12 @@ import path from "path";
 import { BalanceSnapshots, Snapshot } from "../types";
 
 const CACHE_PATH = "./cache";
+const SNAPSHOTS_PATH = "./snapshots";
 
 const join = (...snapshotPath: string[]) =>
   path.join(CACHE_PATH, ...snapshotPath);
+const joinSnapshotPath = (...snapshotPath: string[]) =>
+  path.join(SNAPSHOTS_PATH, ...snapshotPath);
 
 const exists = fs.existsSync;
 
@@ -58,13 +61,16 @@ export const setBalancesSnapshots = (
   force?: boolean
 ) => {
   _.entries(snapshots).forEach(([blockNumber, snapshot]) => {
-    // If cache directory exists
-    if (exists(CACHE_PATH)) {
-      const idPath = join(id);
+    // If snapshots directory exists
+    if (exists(SNAPSHOTS_PATH)) {
+      const idPath = joinSnapshotPath(id);
       if (!exists(idPath)) {
         fs.mkdirSync(idPath);
       }
-      const blockPath = join(id, getFileFromBlockNumber(blockNumber));
+      const blockPath = joinSnapshotPath(
+        id,
+        getFileFromBlockNumber(blockNumber)
+      );
       if (!exists(blockPath) || force) {
         fs.writeFileSync(blockPath, snapshotToStr(snapshot));
       }
@@ -74,9 +80,9 @@ export const setBalancesSnapshots = (
 
 export const loadSnapshot = (id: string, name: string) => {
   if (exists(CACHE_PATH)) {
-    const idPath = join(id);
+    const idPath = joinSnapshotPath(id);
     if (exists(idPath)) {
-      const jsonPath = join(id, name + ".csv");
+      const jsonPath = joinSnapshotPath(id, name + ".csv");
       const data = fs.readFileSync(jsonPath, { encoding: "utf-8" });
       // Split by new line and remove header
       const snapshot: Snapshot = data
