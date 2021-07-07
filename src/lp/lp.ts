@@ -164,17 +164,19 @@ export const getLpSnapshots = async (web3: Web3, blockNumbers: number[]) => {
 
     // Update balance
     if (!blockchainState[sender]) {
-      blockchainState[sender] = { agix, eth };
-    } else {
-      if (contractEvent.event === "Mint") {
+      blockchainState[sender] = { agix: 0, eth: 0 };
+    }
+    switch (contractEvent.event) {
+      case "Mint":
         // Mint
         blockchainState[sender].agix += agix;
         blockchainState[sender].eth += eth;
-      } else {
+        break;
+      case "Burn":
         // Burn
         blockchainState[sender].agix -= agix;
         blockchainState[sender].eth -= eth;
-      }
+        break;
     }
   }
 
