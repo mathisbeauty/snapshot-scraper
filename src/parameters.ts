@@ -1,5 +1,7 @@
 // Staking
 
+import { ClaimingPeriod } from "./types";
+
 // export const AGIX_STAKE_REWARD_PER_PERIOD = 10000000000000;
 
 export const AGI_MIN_STAKE = 50000000000;
@@ -15,6 +17,9 @@ export const AGIX_STAKE_PERIODS: number[] = [15];
 // Holders
 
 export const AGI_FIRST_BLOCK = 12524809;
+
+export const AGI_FIRST_SNAPSHOT = 12260705;
+
 /**
  * Block of the AGIX hardfork
  */
@@ -31,4 +36,16 @@ export const LP_SNAPSHOT_BLOCKS: number[] = [
   12661467,
   // Block at Jul-07-2021 01:22:54 PM +UTC
   12780535,
+];
+
+// Claiming
+
+export const CLAIMING_PERIODS: ClaimingPeriod[] = [
+  {
+    startBlock: 12471031,
+    endBlock: 12683389,
+  },
+  // {
+  //   startBlock: 12683389
+  // }
 ];

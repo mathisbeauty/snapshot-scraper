@@ -1,7 +1,7 @@
 import _ from "lodash";
 import fs from "fs";
 import path from "path";
-import { BalanceSnapshots, Snapshot } from "../types";
+import { BalanceSnapshots, ClaimingSnapshots, Snapshot } from "../types";
 
 const CACHE_PATH = "./cache";
 const SNAPSHOTS_PATH = "./snapshots";
@@ -57,7 +57,7 @@ export const snapshotToStr = (snapshot: Snapshot) => {
 
 export const setBalancesSnapshots = (
   id: string,
-  snapshots: BalanceSnapshots,
+  snapshots: BalanceSnapshots | ClaimingSnapshots,
   force?: boolean
 ) => {
   _.entries(snapshots).forEach(([blockNumber, snapshot]) => {
