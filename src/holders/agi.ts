@@ -1,7 +1,12 @@
 import _ from "lodash";
 import Web3 from "web3";
+import { EventData } from "web3-eth-contract";
 import agiAbiJson from "../../contracts/abi/holders-agi.json";
-import { AGI_TOKEN_CONTRACT_ADDRESS } from "../constants";
+import {
+  AGI_TOKEN_CONTRACT_ADDRESS,
+  AGI_TOKEN_CONTRACT_DEPLOYER,
+  AGI_TOTAL_SUPPLY,
+} from "../constants";
 import { getJson, setJson } from "../helpers/cache-helper";
 import {
   AGI_FIRST_BLOCK,
@@ -9,7 +14,7 @@ import {
   AGI_LAST_BLOCK,
   AGI_SNAPSHOT_INTERVAL,
 } from "../parameters";
-import { BalanceSnapshots } from "../types";
+import { BalanceSnapshots, Snapshot } from "../types";
 
 export const getAgiHoldersSnapshots = async (web3: Web3) => {
   const balanceSnapshots: BalanceSnapshots = {};
@@ -67,6 +72,47 @@ export const getAgiHoldersSnapshots = async (web3: Web3) => {
       }
     }
     setJson("agi_holders", "events", JSON.stringify(events, null, 4));
+  }
+
+  // Set deployed state
+  const blockchainState: { [address: string]: number } = {};
+  blockchainState[AGI_TOKEN_CONTRACT_DEPLOYER] = AGI_TOTAL_SUPPLY;
+
+  console.log(snapshotBlocks);
+  // Get a copy of the desired blocks
+  const snapshotsMissing: number[] = snapshotBlocks.slice();
+
+  for (const contractEvent of events) {
+    // No more snapshots to take, break out of the loop
+    if (snapshotsMissing.length === 0) {
+      break;
+    }
+
+    // Use transaction to sender map
+    const blockNumber = contractEvent.blockNumber;
+    const { from, to, value: _value } = contractEvent.returnValues;
+    const value = Number(_value);
+
+    // Step 3
+
+    // See if a desired block was already passed
+    if (snapshotsMissing[0] < blockNumber) {
+      // Remove first snapshot number
+      const blockSnapshotNumber = snapshotsMissing.shift();
+
+      // Only snapshot AGIX balances, ignore ETH
+      balanceSnapshots[`${blockSnapshotNumber}`] = _.cloneDeep(blockchainState);
+    }
+
+    // Update balance
+    blockchainState[from] -= value;
+    if (blockchainState[from] === 0) {
+      delete blockchainState[from];
+    }
+    if (blockchainState[to] === undefined) {
+      blockchainState[to] = 0;
+    }
+    blockchainState[to] += value;
   }
 
   return balanceSnapshots;
