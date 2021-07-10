@@ -16,9 +16,11 @@ export const AGIX_STAKE_PERIODS: number[] = [15];
 
 // Holders
 
-export const AGI_FIRST_BLOCK = 12524809;
+export const AGI_SNAPSHOT_INTERVAL = 43200;
 
-export const AGI_FIRST_SNAPSHOT = 12260705;
+export const AGI_FIRST_BLOCK = 4767997;
+
+export const AGI_FIRST_SNAPSHOT_BLOCK = 12260705;
 
 /**
  * Block of the AGIX hardfork
