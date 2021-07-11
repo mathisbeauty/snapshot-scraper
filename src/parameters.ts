@@ -16,6 +16,8 @@ export const AGIX_STAKE_PERIODS: number[] = [15];
 
 // Holders
 
+// AGI
+
 export const AGI_SNAPSHOT_INTERVAL = 43200;
 
 export const AGI_FIRST_BLOCK = 4767997;
@@ -27,7 +29,15 @@ export const AGI_FIRST_SNAPSHOT_BLOCK = 12260705;
  */
 export const AGI_LAST_BLOCK = 12524809;
 
+// AGIX
+
+export const AGIX_SNAPSHOT_INTERVAL = 43200;
+
 export const AGIX_FIRST_BLOCK = 12326815;
+
+export const AGIX_FIRST_SNAPSHOT_BLOCK = 12663325;
+
+export const AGIX_SCRAPING_STEP_SIZE = 100;
 
 // LP
 

@@ -78,7 +78,6 @@ export const getAgiHoldersSnapshots = async (web3: Web3) => {
   const blockchainState: { [address: string]: number } = {};
   blockchainState[AGI_TOKEN_CONTRACT_DEPLOYER] = AGI_TOTAL_SUPPLY;
 
-  console.log(snapshotBlocks);
   // Get a copy of the desired blocks
   const snapshotsMissing: number[] = snapshotBlocks.slice();
 
