@@ -104,7 +104,7 @@ export const getAgixHoldersSnapshots = async (web3: Web3) => {
       // Remove first snapshot number
       const blockSnapshotNumber = snapshotsMissing.shift();
 
-      // Only snapshot AGIX balances, ignore ETH
+      // Snapshot balance
       balanceSnapshots[`${blockSnapshotNumber}`] = _.cloneDeep(blockchainState);
     }
 
@@ -119,6 +119,13 @@ export const getAgixHoldersSnapshots = async (web3: Web3) => {
       blockchainState[to] = 0;
     }
     blockchainState[to] += value;
+  }
+
+  // Create snapshot for any block numbers left
+  if (snapshotsMissing.length > 0) {
+    snapshotsMissing.forEach((blockSnapshotNumber) => {
+      balanceSnapshots[`${blockSnapshotNumber}`] = _.cloneDeep(blockchainState);
+    })
   }
 
   return balanceSnapshots;

@@ -189,11 +189,11 @@ export const getAgiStakeSnapshots = async (
   });
 
   // Print the total sum of the AGI tokens for each staking period
-  console.log(
-    _.entries(balanceSnapshots).map(
-      (e) => _.values(e[1]).reduce((p, c) => p + c, 0) / 10 ** 8
-    )
-  );
+  // console.log(
+  //   _.entries(balanceSnapshots).map(
+  //     (e) => _.values(e[1]).reduce((p, c) => p + c, 0) / 10 ** 8
+  //   )
+  // );
 
   return balanceSnapshots;
 };

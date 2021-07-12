@@ -64,11 +64,11 @@ export const getAgiHoldersSnapshots = async (web3: Web3) => {
       console.log(`Requested from block ${fromBlock} to ${toBlock}`);
       if (response.length > 0) {
         events.push(...response);
-        setJson(
-          "agi_holders",
-          `${i}--${fromBlock}-${toBlock}`,
-          JSON.stringify(response, null, 4)
-        );
+        // setJson(
+        //   "agi_holders",
+        //   `${i}--${fromBlock}-${toBlock}`,
+        //   JSON.stringify(response, null, 4)
+        // );
       }
     }
     setJson("agi_holders", "events", JSON.stringify(events, null, 4));
@@ -99,7 +99,7 @@ export const getAgiHoldersSnapshots = async (web3: Web3) => {
       // Remove first snapshot number
       const blockSnapshotNumber = snapshotsMissing.shift();
 
-      // Only snapshot AGIX balances, ignore ETH
+      // Snapshot balance
       balanceSnapshots[`${blockSnapshotNumber}`] = _.cloneDeep(blockchainState);
     }
 
@@ -112,6 +112,13 @@ export const getAgiHoldersSnapshots = async (web3: Web3) => {
       blockchainState[to] = 0;
     }
     blockchainState[to] += value;
+  }
+
+  // Create snapshot for any block numbers left
+  if (snapshotsMissing.length > 0) {
+    snapshotsMissing.forEach((blockSnapshotNumber) => {
+      balanceSnapshots[`${blockSnapshotNumber}`] = _.cloneDeep(blockchainState);
+    })
   }
 
   return balanceSnapshots;

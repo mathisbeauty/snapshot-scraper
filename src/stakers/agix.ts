@@ -177,11 +177,11 @@ export const getAgixStakeSnapshots = async (
   );
 
   // Print the total sum of the AGIX tokens for each staking period
-  console.log(
-    _.entries(tempBalanceSnapshots).map(
-      (e) => _.values(e[1]).reduce((p, c) => p + c, 0) / 10 ** 8
-    )
-  );
+  // console.log(
+  //   _.entries(tempBalanceSnapshots).map(
+  //     (e) => _.values(e[1]).reduce((p, c) => p + c, 0) / 10 ** 8
+  //   )
+  // );
 
   return tempBalanceSnapshots;
 };
