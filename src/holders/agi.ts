@@ -9,6 +9,7 @@ import {
 } from "../constants";
 import { getJson, setJson } from "../helpers/cache-helper";
 import {
+  AGI_AGIX_SNAPSHOT_RANDOM_SPREAD,
   AGI_FIRST_BLOCK,
   AGI_FIRST_SNAPSHOT_BLOCK,
   AGI_LAST_BLOCK,
@@ -23,7 +24,7 @@ export const getAgiHoldersSnapshots = async (web3: Web3) => {
 
   let nextSnapshotBlock = AGI_FIRST_SNAPSHOT_BLOCK;
   do {
-    nextSnapshotBlock += AGI_SNAPSHOT_INTERVAL;
+    nextSnapshotBlock += AGI_SNAPSHOT_INTERVAL + Math.floor((Math.random() * 2 - 1) * AGI_AGIX_SNAPSHOT_RANDOM_SPREAD);
     if (nextSnapshotBlock < AGI_LAST_BLOCK) {
       snapshotBlocks.push(nextSnapshotBlock);
     }

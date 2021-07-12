@@ -15,6 +15,7 @@ import {
   AGIX_FIRST_SNAPSHOT_BLOCK,
   AGIX_SNAPSHOT_INTERVAL,
   AGIX_SCRAPING_STEP_SIZE,
+  AGI_AGIX_SNAPSHOT_RANDOM_SPREAD,
 } from "../parameters";
 import { BalanceSnapshots } from "../types";
 
@@ -28,7 +29,7 @@ export const getAgixHoldersSnapshots = async (web3: Web3) => {
 
   let nextSnapshotBlock = AGIX_FIRST_SNAPSHOT_BLOCK;
   do {
-    nextSnapshotBlock += AGIX_SNAPSHOT_INTERVAL;
+    nextSnapshotBlock += AGIX_SNAPSHOT_INTERVAL + Math.floor((Math.random() * 2 - 1) * AGI_AGIX_SNAPSHOT_RANDOM_SPREAD);
     if (nextSnapshotBlock < lastBlockNumber) {
       snapshotBlocks.push(nextSnapshotBlock);
     }

@@ -16,6 +16,11 @@ export const AGIX_STAKE_PERIODS: number[] = [15];
 
 // Holders
 
+/**
+ * Spreads the block number of a specific snapshot by the amount of blocks specified (backwards or forwards randomly)
+ */
+export const AGI_AGIX_SNAPSHOT_RANDOM_SPREAD = 0
+
 // AGI
 
 export const AGI_SNAPSHOT_INTERVAL = 43200;

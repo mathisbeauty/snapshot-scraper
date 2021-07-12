@@ -1,5 +1,5 @@
 import lpAbiJson from "../../contracts/abi/lp-agix-eth.json";
-import { AGIX_ETH_PAIR_CONTRACT_ADDRESS } from "../constants";
+import { AGIX_ETH_PAIR_CONTRACT_ADDRESS, BURN_ADDRESS } from "../constants";
 import _ from "lodash";
 import Web3 from "web3";
 import { LP_STARTING_BLOCK } from "../parameters";
@@ -34,8 +34,13 @@ export const getLpSnapshots = async (web3: Web3, blockNumbers: number[]) => {
       burnEvents: await contract.getPastEvents("Burn", {
         fromBlock: LP_STARTING_BLOCK,
       }),
+      allTransferEvents: await contract.getPastEvents("Transfer", {
+        fromBlock: LP_STARTING_BLOCK
+      })
     };
-    setJson("agi_lp", "events", JSON.stringify(events, null, 4));
+    // Doesn't include minting and burning transactions
+    events.transferEvents = events.allTransferEvents.filter((event: any) => ![event.returnValues.from,event.returnValues.to].includes(BURN_ADDRESS))
+    setJson("agix_lp", "events", JSON.stringify(events, null, 4));
   }
 
   /**
@@ -52,7 +57,7 @@ export const getLpSnapshots = async (web3: Web3, blockNumbers: number[]) => {
 
   // Merge events and sort them by block number
   const allEvents = _.orderBy(
-    [...events.mintEvents, ...events.burnEvents],
+    [...events.mintEvents, ...events.burnEvents, ...events.transferEvents],
     ["blockNumber"],
     ["asc"]
   );
@@ -90,7 +95,7 @@ export const getLpSnapshots = async (web3: Web3, blockNumbers: number[]) => {
 
       // Store map in the cache
       setJson(
-        "agi_lp",
+        "agix_lp",
         "transaction_senders",
         JSON.stringify(transactionSendersMap, null, 4)
       );
@@ -121,7 +126,7 @@ export const getLpSnapshots = async (web3: Web3, blockNumbers: number[]) => {
    */
 
   // Step 1
-  const blockchainState: { [address: string]: { agix: number; eth: number } } =
+  const blockchainState: { [address: string]: { agix: number; eth: number; lp: number } } =
     {};
 
   // Step 2
@@ -137,6 +142,10 @@ export const getLpSnapshots = async (web3: Web3, blockNumbers: number[]) => {
 
     // Use transaction to sender map
     const sender = transactionSendersMap[contractEvent.transactionHash];
+
+    if (!sender) {
+      continue;
+    }
 
     const blockNumber = contractEvent.blockNumber;
     const { amount0, amount1 } = contractEvent.returnValues;
@@ -164,18 +173,41 @@ export const getLpSnapshots = async (web3: Web3, blockNumbers: number[]) => {
 
     // Update balance
     if (!blockchainState[sender]) {
-      blockchainState[sender] = { agix: 0, eth: 0 };
+      blockchainState[sender] = { agix: 0, eth: 0, lp: 0 };
     }
+    const transferEvents = events.allTransferEvents.filter((event: any) => event.transactionHash === contractEvent.transactionHash)
     switch (contractEvent.event) {
       case "Mint":
-        // Mint
-        blockchainState[sender].agix += agix;
-        blockchainState[sender].eth += eth;
+        if (transferEvents.length > 0) {
+          const mintTransferEvent = transferEvents.find((event: any) => event.returnValues.to === sender && event.returnValues.from === BURN_ADDRESS)
+          if (mintTransferEvent) {
+            // Mint
+            blockchainState[sender].agix += agix;
+            blockchainState[sender].eth += eth;
+            blockchainState[sender].lp += Number(mintTransferEvent.returnValues.value) / (10 ** 18)
+          }
+        }
         break;
       case "Burn":
-        // Burn
-        blockchainState[sender].agix -= agix;
-        blockchainState[sender].eth -= eth;
+        if (transferEvents.length > 0) {
+          const burnTransferEvent = transferEvents.find((event: any) => event.returnValues.from === sender && event.returnValues.to === BURN_ADDRESS)
+          if (burnTransferEvent) {
+            // Burn
+            blockchainState[sender].agix -= agix;
+            blockchainState[sender].eth -= eth;
+            blockchainState[sender].lp -= Number(burnTransferEvent.returnValues.value) / (10 ** 18)
+          }
+        }
+        break;
+      case "Transfer":
+        // LP token transfer
+        if (blockchainState[sender].lp > 0) {
+          // If the account had LP tokens
+          const percentageRemoved = blockchainState[sender].lp / (Number(contractEvent.returnValues.value) / (10 ** 18))
+          blockchainState[sender].agix -= (blockchainState[sender].agix * percentageRemoved);
+          blockchainState[sender].eth -= (blockchainState[sender].eth * percentageRemoved);
+          blockchainState[sender].lp *= (1 - percentageRemoved)
+        }
         break;
     }
   }
