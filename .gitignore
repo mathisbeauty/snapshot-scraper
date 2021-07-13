@@ -3,6 +3,7 @@ package-lock.json
 dist
 cache/**/events.json
 cache/**/stake_holders.json
+cache/**/stake_info.json
 cache/**/transaction_senders.json
 cache/agi_holders/*
 cache/agix_holders/*
