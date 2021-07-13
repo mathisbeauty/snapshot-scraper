@@ -46,6 +46,8 @@ export const getAgixHoldersSnapshots = async (web3: Web3) => {
 
   let events = cachedEvents;
 
+  const responsesPromises: Promise<EventData[]>[] = []
+
   if (!cachedEvents) {
     events = [];
     const stepSize = AGIX_SCRAPING_STEP_SIZE;
@@ -55,7 +57,7 @@ export const getAgixHoldersSnapshots = async (web3: Web3) => {
     const totalSteps = Math.ceil(totalBlocks / stepSize);
 
     for (let i = 0; i <= totalSteps; i++) {
-      console.log(`Step ${i} of ${totalSteps}`);
+      // console.log(`Step ${i} of ${totalSteps}`);
       const offset = i * stepSize;
       const offsetLast = (i + 1) * stepSize;
       const fromBlock = AGIX_FIRST_BLOCK + offset;
@@ -63,20 +65,24 @@ export const getAgixHoldersSnapshots = async (web3: Web3) => {
       if (toBlock > lastBlockNumber) {
         toBlock = lastBlockNumber;
       }
-      const response = await contract.getPastEvents("Transfer", {
+      responsesPromises.push(contract.getPastEvents("Transfer", {
         fromBlock,
         toBlock,
-      });
-      console.log(`Requested from block ${fromBlock} to ${toBlock}`);
-      if (response && response.length > 0) {
-        events.push(...response);
-        // setJson(
-        //   "agix_holders",
-        //   `${i}--${fromBlock}-${toBlock}`,
-        //   JSON.stringify(response, null, 4)
-        // );
-      }
+      }));
+      // console.log(`Requested from block ${fromBlock} to ${toBlock}`);
     }
+    await Promise.all(responsesPromises).then((responses) => {
+      responses.forEach((response) => {
+        if (response.length > 0) {
+          events.push(...response);
+          // setJson(
+          //   "agix_holders",
+          //   `${i}--${fromBlock}-${toBlock}`,
+          //   JSON.stringify(response, null, 4)
+          // );
+        }
+      })
+    })
     setJson("agix_holders", "events", JSON.stringify(events, null, 4));
   }
 

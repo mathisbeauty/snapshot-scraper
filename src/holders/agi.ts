@@ -15,7 +15,7 @@ import {
   AGI_LAST_BLOCK,
   AGI_SNAPSHOT_INTERVAL,
 } from "../parameters";
-import { BalanceSnapshots, Snapshot } from "../types";
+import { BalanceSnapshots } from "../types";
 
 export const getAgiHoldersSnapshots = async (web3: Web3) => {
   const balanceSnapshots: BalanceSnapshots = {};
@@ -49,8 +49,10 @@ export const getAgiHoldersSnapshots = async (web3: Web3) => {
 
     const totalSteps = Math.ceil(totalBlocks / stepSize);
 
+    const responsesPromises: Promise<EventData[]>[] = []
+
     for (let i = 0; i <= totalSteps; i++) {
-      console.log(`Step ${i} of ${totalSteps}`);
+      // console.log(`Step ${i} of ${totalSteps}`);
       const offset = i * stepSize;
       const offsetLast = (i + 1) * stepSize;
       const fromBlock = AGI_FIRST_BLOCK + offset;
@@ -58,20 +60,24 @@ export const getAgiHoldersSnapshots = async (web3: Web3) => {
       if (toBlock > AGI_LAST_BLOCK) {
         toBlock = AGI_LAST_BLOCK;
       }
-      const response = await contract.getPastEvents("Transfer", {
+      responsesPromises.push(contract.getPastEvents("Transfer", {
         fromBlock,
         toBlock,
-      });
-      console.log(`Requested from block ${fromBlock} to ${toBlock}`);
-      if (response.length > 0) {
-        events.push(...response);
-        // setJson(
-        //   "agi_holders",
-        //   `${i}--${fromBlock}-${toBlock}`,
-        //   JSON.stringify(response, null, 4)
-        // );
-      }
+      }));
+      // console.log(`Requested from block ${fromBlock} to ${toBlock}`);
     }
+    await Promise.all(responsesPromises).then((responses) => {
+      responses.forEach((response) => {
+        if (response.length > 0) {
+          events.push(...response);
+          // setJson(
+          //   "agi_holders",
+          //   `${i}--${fromBlock}-${toBlock}`,
+          //   JSON.stringify(response, null, 4)
+          // );
+        }
+      })
+    })
     setJson("agi_holders", "events", JSON.stringify(events, null, 4));
   }
 

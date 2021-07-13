@@ -212,5 +212,20 @@ export const getLpSnapshots = async (web3: Web3, blockNumbers: number[]) => {
     }
   }
 
+  // Create snapshot for any block numbers left
+  if (snapshotsMissing.length > 0) {
+    snapshotsMissing.forEach((blockSnapshotNumber) => {
+      balanceSnapshots[`${blockSnapshotNumber}`] = balanceSnapshots[`${blockSnapshotNumber}`] = _.entries(
+        blockchainState
+      ).reduce((prev, [address, liquidity]) => {
+        const next = {
+          ...prev,
+        };
+        next[address] = liquidity.agix;
+        return next;
+      }, {} as Snapshot);
+    })
+  }
+
   return balanceSnapshots;
 };
