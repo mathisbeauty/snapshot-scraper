@@ -203,7 +203,7 @@ export const getLpSnapshots = async (web3: Web3, blockNumbers: number[]) => {
         // LP token transfer
         if (blockchainState[sender].lp > 0) {
           // If the account had LP tokens
-          const percentageRemoved = blockchainState[sender].lp / (Number(contractEvent.returnValues.value) / (10 ** 18))
+          const percentageRemoved = (Number(contractEvent.returnValues.value) / (10 ** 18)) / blockchainState[sender].lp
           blockchainState[sender].agix -= (blockchainState[sender].agix * percentageRemoved);
           blockchainState[sender].eth -= (blockchainState[sender].eth * percentageRemoved);
           blockchainState[sender].lp *= (1 - percentageRemoved)
